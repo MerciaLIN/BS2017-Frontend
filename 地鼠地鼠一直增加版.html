@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>whack-a-mole</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url(./images/photo.jpg);
+            background-repeat: no-repeat;
+            background-size: 1600px 900px;
+            font-family: Microsoft JhengHei;
+            
+        }
+
+        #game {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        #playground {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100px;
+            height: 100px;
+            margin: auto;
+        }
+
+        #playground .mole {
+            width: 120px;
+            height: 120px;
+            line-height: 120px;
+            text-align: center;
+            /*background-image: url(./images/grass-upper.png);*/
+            background-repeat: no-repeat;
+            background-size: 120px 60px;
+            background-position: top 0;
+            position: relative;
+        }
+
+        #playground .mole::before {
+            content: "";
+            width: 120px;
+            height: 120px;
+            background-image: url(./images/molea.png);
+            background-repeat: no-repeat;
+            background-size: 100px 100px;
+            background-position: top 0;
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            opacity: .6;
+        }
+
+        #playground .mole.active::before {
+            background-image: url(./images/molee.png);
+            top: 0;
+            opacity: 1;
+            transition: all .3s;
+        }
+
+        #playground table {
+            margin-top: -180px;
+            margin-left: -180px;
+        }
+
+        #playground .mole.hit::before {
+            background-image: url(./images/molehit.png);
+            top: 20px;
+            opacity: 1;
+            transition: all .2s;
+        }
+
+        #playground .mole::after {
+            content: "";
+            width: 120px;
+            height: 60px;
+            background-image: url(./images/asd.png);
+            background-repeat: no-repeat;
+            background-size: 140px 70px;
+            background-position: top 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        #score {
+            position: fixed;
+            min-width: 250px;
+            min-height: 720px;
+            right: 0;
+            top: 20px;
+            background: rgb(238, 243, 231);
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game">
+        <div id="playground">
+            <table>
+                <tr>
+                    <td>
+                        <div id="s0" class="mole"></div>
+                    </td>
+                    <td>
+                        <div id="s1" class="mole "></div>
+                    </td>
+                    <td>
+                        <div id="s2" class="mole"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="s3" class="mole"></div>
+                    </td>
+                    <td>
+                        <div id="s4" class="mole"></div>
+                    </td>
+                    <td>
+                        <div id="s5" class="mole"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="s6" class="mole"></div>
+                    </td>
+                    <td>
+                        <div id="s7" class="mole"></div>
+                    </td>
+                    <td>
+                        <div id="s8" class="mole"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="score">
+            <h2 class="text-danger">Scoreboard</h2>
+            <h3>
+                <span class="text-info">Your score: <span>
+                    <span id="current-score" class="scores">0</span>
+            </h3>
+            <h3>
+                <span class="text-info">Level: <span>
+                    <span id="current-level" class="scores">1</span>
+            </h3>
+            <h3>
+                <span class="text-info">Life: <span>
+                    
+                </h3>
+                <div class="progress">
+                    <div id="progress" class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+                        100
+                    </div>
+                </div>
+                <hr>
+                <p>
+                    <select id="sizing" class="form-control">
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                        <option>6</option>
+                      
+                    </select>
+                </p>
+                <p>
+                    <button id="start" class="btn btn-success">Start <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
+                <button id="stop" class="btn btn-danger">Stop <span class="glyphicon glyphicon-pause" aria-hidden="true"></span></span></button>
+                </p>
+        </div>
+        <div id="control">
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        $(function () {
+            var score = 0,
+                life = 100,
+                timer = null,
+                levelProfiles = [{
+                        level: 1,
+                        score: 0,
+                        moles: 1,
+                        interval: 1500
+                    },
+                    {
+                        level: 2,
+                        score: 100,
+                        moles: 2,
+                        interval: 1500
+                    },
+                    {
+                        level: 3,
+                        score: 200,
+                        moles: 2,
+                        interval: 1250
+                    },
+                    {
+                        level: 4,
+                        score: 300,
+                        moles: 2,
+                        interval: 1000
+                    },
+                    {
+                        level: 5,
+                        score: 500,
+                        moles: 3,
+                        interval: 1000
+                    },
+                    {
+                        level: 6,
+                        score: 1000,
+                        moles: 3,
+                        interval: 750
+                    },
+                ];
+
+            var $playground = $("#playground");
+
+            $playground.on("click", ".mole", function () {
+                // 打地鼠事件
+                var $this = $(this);
+                if ($this.attr("class") == ("mole active")) {
+                    score += 10;
+                    $this.removeClass("active")
+                    $("#current-score").html(score);
+                    $this.addClass("hit");
+                } else {
+                    life -= 10;
+                    $("#progress").html(life)
+                        .css("width", life + "%");
+                }
+            });
+
+            $("#sizing").change(function () {
+                // 變更尺寸事件
+                 var $this = $(this);
+                    createPlayground($this.val());
+            });
+
+            $("#start").click(function () {
+                // 開始遊戲事件
+                startGame();
+            });
+
+            $("#stop").click(function () {
+                // 終止遊戲事件
+                stopGame();
+            });
+
+
+
+            function createPlayground(edge) {
+                // 建立空間
+                // $playground.empty();
+
+                //     var $table = $("<table></table>"),
+                //         counter = 0;
+
+                //     for (var q = 0; q < edge; q++) {
+                //         var $tr = $("<tr></<tr>");
+                //         for (var j = 0; j < edge; j++) {
+                //             var $td = $("<td></<td>")
+                //                             .appendTo($tr);
+
+                //             var $div = $("<div></div>")
+                //                             .addClass("mole")
+                //                             .appendTo($td);
+                //         }    
+                //         $tr.appendTo($table);
+                //     }
+                //     $table
+                //         .appendTo($playground)
+                //         .css({
+                //             marginTop: -1 * ($table.outerHeight() / 2),
+                //             marginLeft: -1 * ($table.outerWidth() / 2)
+                //         });
+                
+                
+            }
+            var i = 0;
+
+            function startGame() {
+                // 開始遊戲
+                $("#s" + i).removeClass("hit");
+                $("#s" + i).removeClass("active");
+                i = Math.floor(Math.random() * 10);
+                $("#s" + i).addClass("active");
+                setTimeout(startGame, 1500);
+
+
+            }
+
+            function stopGame() {
+                // 終止遊戲
+                
+                   
+            }
+
+            function getLevelProfile() {
+                // 取得目前等級參數
+            }
+
+            function updateScore() {
+                // 更新成績
+            }
+
+            function updateLife() {
+                // 更新生命值
+            }
+
+            function nextMole() {
+                // 🐭 下一隻地鼠
+            }
+
+            createPlayground(3);
+        });
+    </script>
+</body>
+
+</html>
